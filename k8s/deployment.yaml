@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mavhu-api-system
+  labels:
+    app: mavhu-api-system
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: mavhu-api-system
+  template:
+    metadata:
+      labels:
+        app: mavhu-api-system
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: mavhu-api-system
+          # Set to the tag printed in the workflow's job summary, e.g. main-v0.1.4
+          image: ghcr.io/princemakaza/mavhu-api-system/mavhu-api-system:main-v0.0.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_SCHEMA
+              value: mavhu
+            - name: DB_LOGGING
+              value: "false"
+            - name: JWT_EXPIRES_IN
+              value: 1d
+          envFrom:
+            # DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET — see secret.example.yaml
+            - secretRef:
+                name: mavhu-api-system-secrets
+          # No dedicated health endpoint yet; Swagger UI is served without auth.
+          readinessProbe:
+            httpGet:
+              path: /api/docs
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mavhu-api-system
+  labels:
+    app: mavhu-api-system
+spec:
+  selector:
+    app: mavhu-api-system
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

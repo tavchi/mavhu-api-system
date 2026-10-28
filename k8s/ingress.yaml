@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mavhu-api-system
+  labels:
+    app: mavhu-api-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m # Excel/CSV bulk imports
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.mavhu.example.com
+      secretName: mavhu-api-system-tls
+  rules:
+    - host: api.mavhu.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mavhu-api-system
+                port:
+                  name: http

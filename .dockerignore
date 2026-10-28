@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+.git
+.github
+k8s
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+.idea
+.vscode
+.claude
+README.md
